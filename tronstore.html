@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRON STORE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+
+        :root {
+            --tron-cyan: #00f3ff;
+            --bat-yellow: #ffcc00;
+            --grid-bg: #020508;
+            --panel-glass: rgba(0, 15, 25, 0.9);
+            --neon-glow: 0 0 15px var(--tron-cyan);
+        }
+
+        * { box-sizing: border-box; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        body, html {
+            margin: 0; padding: 0;
+            background-color: var(--grid-bg);
+            color: #e0faff;
+            font-family: 'Roboto Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+	#matrix-canvas 
+	{
+   		 position: absolute;
+   		 top: 0;
+   		 left: 0;
+   		 width: 100%;
+   		 height: 100%;
+	}
+
+
+        /* --- LANDING PAGE --- */
+        #landing-page {
+    		position: fixed;
+   		top: 0; left: 0; width: 100%; height: 100%;
+    		background: black;
+    		display: flex; 
+    		flex-direction: column;
+    		justify-content: center; 
+    		align-items: center;
+    		z-index: 1000;
+    		overflow: hidden;
+}
+
+#landing-page > *:not(canvas) {
+    position: relative;
+    z-index: 2;
+}
+
+
+        .tron-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 8rem;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--tron-cyan);
+            filter: drop-shadow(0 0 20px var(--tron-cyan));
+            margin-bottom: 20px;
+            letter-spacing: 20px;
+            animation: flicker 2s infinite;
+        }
+
+        .enter-btn {
+            padding: 15px 40px;
+            background: transparent;
+            border: 2px solid var(--tron-cyan);
+            color: var(--tron-cyan);
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            box-shadow: var(--neon-glow);
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }
+	.credit-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    color: var(--bat-yellow);
+}
+
+/* Tron coin */
+.tron-coin {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--tron-cyan);
+    color: var(--tron-cyan);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+    box-shadow: 0 0 12px var(--tron-cyan);
+    text-shadow: 0 0 6px var(--tron-cyan);
+    background: rgba(0, 243, 255, 0.08);
+}
+.tron-coin.small {
+    width: 18px;
+    height: 18px;
+    font-size: 0.6rem;
+    border-width: 1.5px;
+    box-shadow: 0 0 8px var(--tron-cyan);
+}
+
+
+
+        .enter-btn:hover { background: var(--tron-cyan); color: #000; box-shadow: 0 0 40px var(--tron-cyan); }
+
+        /* --- THE MOVING GRID BACKGROUND --- */
+        .grid-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            perspective: 600px;
+            overflow: hidden;
+        }
+
+        .grid-floor {
+            position: absolute;
+            width: 400%; height: 400%;
+            top: -50%; left: -150%;
+            background-image: 
+                linear-gradient(0deg, transparent 24%, var(--tron-cyan) 25%, var(--tron-cyan) 26%, transparent 27%), 
+                linear-gradient(90deg, transparent 24%, var(--tron-cyan) 25%, var(--tron-cyan) 26%, transparent 27%);
+            background-size: 80px 80px;
+            transform: rotateX(65deg);
+            animation: move-grid 3s linear infinite;
+            opacity: 0.15;
+        }
+
+        @keyframes move-grid { from { transform: rotateX(65deg) translateY(0); } to { transform: rotateX(65deg) translateY(80px); } }
+
+        /* --- DASHBOARD UI --- */
+        #dashboard {
+            display: none;
+            padding: 20px;
+            flex-grow: 1;
+            grid-template-columns: 1fr 380px;
+            grid-template-rows: 60px 1fr;
+            gap: 20px;
+            overflow: hidden;
+        }
+	/* --- BUFFER SCREEN --- */
+	#buffer-screen {
+    	position: fixed;
+    	top: 0;
+    	left: 0;
+    	width: 100%;
+    	height: 100%;
+    	background: black;
+    	display: none;
+    	flex-direction: column;
+    	justify-content: center;
+    	align-items: center;
+    	z-index: 2000;
+}
+
+/* Glowing spinning ring */
+.loader-ring {
+    width: 90px;
+    height: 90px;
+    border: 4px solid rgba(0, 243, 255, 0.1);
+    border-top: 4px solid var(--tron-cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 20px var(--tron-cyan);
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+.loader-text {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--tron-cyan);
+    letter-spacing: 3px;
+    font-size: 0.8rem;
+    text-shadow: 0 0 10px var(--tron-cyan);
+    animation: flicker 2s infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+
+        header {
+            grid-column: span 2;
+            border: 1px solid var(--tron-cyan);
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(0,0,0,0.95);
+            padding: 0 20px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+            z-index: 10;
+        }
+	.mission-reward {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    color: var(--bat-yellow);
+    font-family: 'Orbitron';
+}
+
+
+        .panel {
+            background: var(--panel-glass);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0, 243, 255, 0.05);
+        }
+
+        .label { 
+            font-family: 'Orbitron'; 
+            font-size: 0.75rem; 
+            color: var(--bat-yellow); 
+            margin-bottom: 20px; 
+            display: block; 
+            border-bottom: 1px solid var(--bat-yellow); 
+            padding-bottom: 8px;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        /* --- EXTENDED STORE --- */
+        .store-section { margin-bottom: 30px; }
+        .category-title { 
+            font-family: 'Orbitron'; 
+            font-size: 0.65rem; 
+            color: var(--tron-cyan); 
+            margin-bottom: 12px; 
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
+        .store-item { 
+            border: 1px solid rgba(0, 243, 255, 0.2); 
+            padding: 15px; 
+            background: rgba(0, 243, 255, 0.03); 
+            cursor: pointer; 
+            border-radius: 2px;
+            position: relative;
+        }
+        .store-item:hover { 
+            background: rgba(0, 243, 255, 0.12); 
+            border-color: var(--tron-cyan); 
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); 
+            transform: translateY(-2px); 
+        }
+        .store-item .name { font-family: 'Orbitron'; font-size: 0.8rem; margin-bottom: 5px; color: #fff; }
+        .store-item .desc { font-size: 0.6rem; color: #aaa; margin-bottom: 10px; line-height: 1.3; }
+        .store-item .price { color: var(--bat-yellow); font-family: 'Orbitron'; font-size: 0.75rem; font-weight: bold; }
+
+        /* --- FOOTER --- */
+        footer {
+            background: rgba(0, 0, 0, 0.95);
+            border-top: 1px solid var(--tron-cyan);
+            padding: 12px 0;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+            color: var(--tron-cyan);
+            box-shadow: 0 -5px 20px rgba(0, 243, 255, 0.2);
+            z-index: 100;
+        }
+
+        .author-name {
+            display: inline-block;
+            animation: flicker 3s infinite;
+            text-shadow: 0 0 10px var(--tron-cyan);
+            font-weight: bold;
+        }
+
+        /* --- SYSTEM PANELS --- */
+        .input-box { display: flex; gap: 10px; margin-bottom: 25px; }
+        input { background: rgba(0,0,0,0.8); border: 1px solid var(--tron-cyan); color: #fff; padding: 12px; font-family: inherit; flex-grow: 1; outline: none; font-size: 0.8rem; }
+        .add-btn { background: var(--tron-cyan); border: none; padding: 0 20px; cursor: pointer; font-weight: bold; color: #000; }
+        #taskList li { border-left: 2px solid var(--bat-yellow); background: rgba(255, 204, 0, 0.03); padding: 12px; margin-bottom: 8px; font-size: 0.8rem; display: flex; justify-content: space-between; }
+        #purchase-log { height: 180px; overflow-y: auto; border: 1px solid #111; padding: 10px; background: #000; font-size: 0.7rem; color: var(--tron-cyan); line-height: 1.6; }
+
+        @keyframes flicker { 
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; filter: drop-shadow(0 0 5px var(--tron-cyan)); }
+            20%, 22%, 24%, 55% { opacity: 0.5; filter: none; }
+        }
+	
+
+
+
+    </style>
+</head>
+<body>
+
+<div id="landing-page">
+    <canvas id="matrix-canvas"></canvas>
+    <div class="tron-logo">TRON STORE</div>
+    <button class="enter-btn" onclick="enterGrid()">Sync Terminal</button>
+</div>
+<div id="buffer-screen">
+    <div class="loader-ring"></div>
+    <div class="loader-text">SYNCING WITH GRID...</div>
+</div>
+
+
+<div class="grid-canvas"><div class="grid-floor"></div></div>
+
+<div id="dashboard">
+    <header>
+    <button onclick="goToLanding()" 
+        style="font-family: 'Orbitron'; color: var(--tron-cyan); letter-spacing: 2px; background: transparent; border: 1px solid var(--tron-cyan); padding: 6px 12px; cursor: pointer;">
+        TRON_STORE // GRID_OS_4.0
+    </button>
+
+    <div style="display:flex; align-items:center; gap:10px;">
+        <div class="credit-display">
+    <div class="tron-coin">T</div>
+    <span id="credit-count">15000</span>
+</div>
+
+        <button onclick="depositCredits()" 
+            style="background: var(--bat-yellow); border:none; padding:6px 12px; font-family:'Orbitron'; cursor:pointer;">
+            + DEPOSIT
+        </button>
+    </div>
+
+    <div id="clock">00:00:00</div>
+</header>
+
+
+    <div class="panel">
+        <span class="label">THE_ARMORY // CORE_UPGRADES</span>
+        
+        <div class="store-section">
+            <div class="category-title">System_Protocols</div>
+            <div class="store-grid">
+                <div class="store-item" onclick="buyItem('Bit_Shield', 400)">
+                    <p class="name">BIT_SHIELD v2.0</p>
+                    <p class="desc">Enhanced firewall against grid tracers.</p>
+                    <p class="price">
+    			<span class="tron-coin small">T</span>
+   				 400
+			</p>
+
+                </div>
+                <div class="store-item" onclick="buyItem('Cloak_Mode', 1500)">
+                    <p class="name">CLOAK_MODE</p>
+                    <p class="desc">Temporary invisibility on the Grid radar.</p>
+                    <p class="price">
+    <span class="tron-coin small">T</span>
+    1500
+</p>
+
+                </div>
+                <div class="store-item" onclick="buyItem('Data_Streamer', 850)">
+                    <p class="name">DATA_STREAMER</p>
+                    <p class="desc">Increases mission decoding speed by 40%.</p>
+                    <p class="price">
+    <span class="tron-coin small">T</span>
+    850
+</p>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="store-section">
+            <div class="category-title">Grid_Transport</div>
+            <div class="store-grid">
+                <div class="store-item" onclick="buyItem('Light_Cycle_G5', 3000)">
+                    <p class="name">LIGHT_CYCLE_G5</p>
+                    <p class="desc">High-velocity light ribbon generator.</p>
+                    <p class="price">
+    <span class="tron-coin small">T</span>
+    3000
+</p>
+
+                </div>
+                <div class="store-item" onclick="buyItem('Bat_Tank_Grid', 5500)">
+                    <p class="name">BAT_TANK_GRID</p>
+                    <p class="desc">Heavy armor for sector-wide incursions.</p>
+                    <p class="price">
+    <span class="tron-coin small">T</span>
+    5500
+</p>
+
+                </div>
+                <div class="store-item" onclick="buyItem('Aerial_Recognizer', 7500)">
+                    <p class="name">AERIAL_RECOGNIZER</p>
+                    <p class="desc">Vertical sector patrol and tactical drop.</p>
+                    <p class="price">
+    <span class="tron-coin small">T</span>
+    7500
+</p>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="store-section">
+            <div class="category-title">Utility_Gadgets</div>
+            <div class="store-grid">
+                <div class="store-item" onclick="buyItem('Neon_Batarang', 250)">
+                    <p class="name">NEON_BATARANG</p>
+                    <p class="desc">Kinetic weapon with light-flicker distraction.</p>
+                    <p class="price">
+    <span class="tron-coin small">T</span>
+    250
+</p>
+
+                </div>
+                <div class="store-item" onclick="buyItem('Identity_Disc_X', 2000)">
+                    <p class="name">ID_DISC_MOD_X</p>
+                    <p class="desc">Data-storage disc with lethal ricochet tech.</p>
+                    <p class="price">
+    <span class="tron-coin small">T</span>
+    2000
+</p>
+
+                </div>
+                <div class="store-item" onclick="buyItem('EMP_Grenade', 1200)">
+                    <p class="name">EMP_GRENADE</p>
+                    <p class="desc">Short-circuit local Grid programs instantly.</p>
+                    <p class="price">
+    <span class="tron-coin small">T</span>
+    1200
+</p>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <span class="label">GRID_OBJECTIVES</span>
+        <div class="input-box">
+            <input type="text" id="taskInput" placeholder="Enter new mission code...">
+            <button class="add-btn" onclick="addTask()">DECODE</button>
+        </div>
+        <ul id="taskList" style="list-style: none; padding: 0;"></ul>
+
+        <div style="margin-top: 40px;">
+            <span class="label">TRANSACTION_HISTORY</span>
+            <div id="purchase-log">> Awaiting terminal input...</div>
+        </div>
+
+        <div style="margin-top: 30px; font-size: 0.7rem; color: #444;">
+            <p>> SYSTEM: <span style="color: var(--tron-cyan)">STABLE</span></p>
+            <p>> UPGRADES: <span id="upgrade-count" style="color: var(--bat-yellow)">0</span></p>
+            <p>> LOCATION: SECTOR_7G</p>
+        </div>
+    </div>
+</div>
+
+<footer>
+    MADE BY <span class="author-name">CYPHER SYNDICATE</span> 
+</footer>
+<div id="tron-cursor"></div>
+<script>
+let credits = 15000;
+let upgrades = 0;
+const missionReward = 300;
+
+
+function enterGrid() {
+    const buffer = document.getElementById('buffer-screen');
+    const landing = document.getElementById('landing-page');
+    const dashboard = document.getElementById('dashboard');
+
+    buffer.style.display = 'flex';
+    landing.style.opacity = '0';
+
+    setTimeout(() => {
+        buffer.style.display = 'none';
+        landing.style.display = 'none';
+        dashboard.style.display = 'grid';
+    }, 2000); // buffer duration
+}
+
+
+setInterval(() => {
+    document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+}, 1000);
+
+function buyItem(name, cost) {
+    if (credits >= cost) {
+        credits -= cost;
+        upgrades++;
+        document.getElementById('credit-count').innerText = credits;
+        document.getElementById('upgrade-count').innerText = upgrades;
+
+        const log = document.getElementById('purchase-log');
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        log.innerHTML = `<div style="color: #fff; margin-bottom:5px;">> [${time}] SUCCESS: ${name} deployed. (-${cost} CR)</div>` + log.innerHTML;
+    } else {
+        const log = document.getElementById('purchase-log');
+        log.innerHTML = `<div style="color: #ff4444; margin-bottom:5px;">> [FAILED] INSUFFICIENT CREDITS FOR ${name.toUpperCase()}</div>` + log.innerHTML;
+    }
+}
+
+function addTask() {
+    const input = document.getElementById('taskInput');
+    if (!input.value) return;
+
+    const li = document.createElement('li');
+
+    li.innerHTML = `
+        <span>> ${input.value}</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span class="mission-reward">
+                <span class="tron-coin small">T</span>
+                ${missionReward}
+            </span>
+            <span style="color:var(--tron-cyan); cursor:pointer;"
+                  onclick="completeMission(this.parentElement.parentElement)">
+                  [CLEAR]
+            </span>
+        </div>
+    `;
+
+    document.getElementById('taskList').prepend(li);
+    input.value = '';
+}
+
+function completeMission(taskElement) {
+    credits += missionReward;
+    document.getElementById('credit-count').innerText = credits;
+
+    const log = document.getElementById('purchase-log');
+    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+    log.innerHTML = `
+        <div style="color:#00ff88; margin-bottom:5px;">
+        > [${time}] MISSION COMPLETE: +${missionReward} CR
+        </div>
+    ` + log.innerHTML;
+
+    taskElement.remove();
+}
+
+
+function depositCredits() {
+    let amount = prompt("Enter credit amount to deposit:");
+    amount = parseInt(amount);
+
+    if (!isNaN(amount) && amount > 0) {
+        credits += amount;
+        document.getElementById('credit-count').innerText = credits;
+
+        const log = document.getElementById('purchase-log');
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        log.innerHTML = `<div style="color: #00ff88; margin-bottom:5px;">> [${time}] DEPOSIT: +${amount} CR</div>` + log.innerHTML;
+    }
+}
+
+function goToLanding() {
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('landing-page').style.display = 'flex';
+    document.getElementById('landing-page').style.opacity = '1';
+}
+
+/* MATRIX RAIN EFFECT (TRON STYLE) */
+const canvas = document.getElementById("matrix-canvas");
+const ctx = canvas.getContext("2d");
+
+let letters = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+let fontSize = 16;
+let columns;
+let drops = [];
+
+function setupMatrix() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    columns = Math.floor(canvas.width / fontSize);
+    drops = [];
+
+    for (let i = 0; i < columns; i++) {
+        drops[i] = Math.random() * canvas.height;
+    }
+}
+
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#00f3ff";
+    ctx.font = fontSize + "px monospace";
+
+    for (let i = 0; i < drops.length; i++) {
+        const text = letters[Math.floor(Math.random() * letters.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.97) {
+            drops[i] = 0;
+        }
+
+        drops[i]++;
+    }
+}
+
+setupMatrix();
+setInterval(drawMatrix, 33);
+window.addEventListener("resize", setupMatrix);
+
+
+
+</script>
+
+
+
+</body>
+</html>
